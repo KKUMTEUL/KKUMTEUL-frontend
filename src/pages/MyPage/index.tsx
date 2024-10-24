@@ -3,16 +3,84 @@ import Header from '../../components/layout/Header';
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { RouteDef } from "../../routes/RouteDef.tsx";
+import { useEffect, useState } from 'react';
+import axios from 'axios';
+
+
+interface UserProps {
+  username:string
+  profileImageBase64:string
+  nickName:string
+  phoneNumber:string
+  birthDate:string
+}
+
+interface ChildProfileProps {
+  childName:string
+  childBirthDate:string
+  age:string
+  childProfileId:number
+  childGender: string; 
+  childProfileImage: string;
+}
+
 
 const Index = () => {
   const navigate = useNavigate();
 
+  const [userData, setUserData] = useState<UserProps>();
+  const [childProfiles, setChildProfiles] = useState<ChildProfileProps[]>([]);
+
+  // 유저 정보 조회
+  const fetchUserData = async (userId: number) => {
+    try {
+      const response = await axios.get(`/kkumteul/api/users/${userId}`);
+      console.log('User data:', response.data.response);
+      const userResponse = response.data.response;
+
+      if (userResponse.profileImageBase64) {
+        userResponse.profileImageBase64 = `data:image/jpeg;base64,${userResponse.profileImageBase64}`;
+      }
+      // console.log(typeof(userResponse.profileImageBase64));
+
+      setUserData(response.data.response); // 조회한 유저 정보 세팅
+      setChildProfiles(response.data.response.childProfileList || []); // 조회한 유저의 자녀 프로필 정보 세팅
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error('사용자 정보 가져오기 실패:', error);
+      } else {
+        console.error('Unexpected error:', error);
+      }
+    }
+  };
+
+  // 성별 정보 포맷팅
+  const formatGender = (gender: string) => {
+    switch (gender) {
+      case 'MALE':
+        return '남아';
+      case 'FEMALE':
+        return '여아';
+      default:
+        return '알 수 없음';
+    }
+  };
+  
+  useEffect(() => {
+    const userId = 1; // TODO: 토큰에서 꺼내오는 방식으로 변경
+    fetchUserData(userId);
+  }, []);
+
   const handleEditProfile = () => {
-    navigate(RouteDef.MyPageEditUserProfile.path);
+    navigate(RouteDef.MyPageEditUserProfile.path, {
+      state: { userData } // 유저 정보 수정페이지로 이동할 때 유저 데이터 넘기기
+    });
   };
 
   const handleEditChildrenProfile = () => {
-    navigate('/mypage/manageChildProfile');
+    navigate('/mypage/manageChildProfile', {
+      state: { childProfiles }
+    });
   };
 
   const handleViewChildProfile = (childId: number) => {
@@ -31,16 +99,18 @@ const Index = () => {
     <Container color="#f3f3f3">
       <Header textcolor="#000000" color="#f3f3f3" nextBtnImageUrl="/assets/home.svg" title="마이페이지" nextPage="/" />
       <MyPageContainer>
+        {userData && (
         <ProfileCard>
           <ProfileContent>
-            <ProfileImage src="/assets/sports.png" alt="Profile" />
+            <ProfileImage src={userData?.profileImageBase64 || "/assets/sports.png"} alt="Profile" />
             <ProfileInfo>
-              <h3>류금정</h3>
-              <p>금정씨</p>
+              <h3>{userData.username}</h3>
+              <p>{userData.nickName}</p>
             </ProfileInfo>
             <UserEditButton onClick={handleEditProfile}>편집</UserEditButton>
           </ProfileContent>
         </ProfileCard>
+        )}
 
         <ProfileCard>
           <ProfileHeader>
@@ -50,15 +120,15 @@ const Index = () => {
           <Divider />
 
           {childProfiles.map((child) => (
-            <ChildProfile key={child.id}>
-              <ProfileImage src={child.profileImage} alt={child.name} />
+            <ChildProfile key={child.childProfileId}>
+              <ProfileImage src={child.childProfileImage} alt={child.childName} />
               <ChildInfo>
-                <h4>{child.name}</h4>
-                <p>{child.birthDate}</p>
+                <h4>{child.childName}</h4>
+                <p>{child.childBirthDate.split("T")[0]}</p>
                 <ChildInfoText>{child.age}</ChildInfoText>
-                <ChildInfoText>{child.gender}</ChildInfoText>
+                <ChildInfoText>{formatGender(child.childGender)}</ChildInfoText>
               </ChildInfo>
-              <ArrowButton onClick={() => handleViewChildProfile(child.id)}>{'>'}</ArrowButton>
+              <ArrowButton onClick={() => handleViewChildProfile(child.childProfileId)}>{'>'}</ArrowButton>
             </ChildProfile>
           ))}
 
@@ -114,7 +184,6 @@ const ProfileImage = styled.img`
 const ChildInfoText = styled.span`
   color: #888888;
   font-size: 12px;
-  margin-right: 4px;
 `;
 
 const ProfileInfo = styled.div`
@@ -218,22 +287,22 @@ const LogoutButton = styled(Button)`
   margin-top: 300px;
 `;
 
-
-const childProfiles = [
-    {
-      id: 1,
-      name: "금정",
-      birthDate: "2017년 03월 4일",
-      age: "8살",
-      gender: "여아",
-      profileImage: "/assets/sports.png"
-    },
-    {
-      id: 2,
-      name: "금정",
-      birthDate: "2024년 03월 4일",
-      age: "2살",
-      gender: "남아",
-      profileImage: "/assets/sports.png"
-    }
-  ];
+// 더미데이터 사용 X
+// const childProfiles = [
+//     {
+//       id: 1,
+//       name: "금정",
+//       birthDate: "2017년 03월 4일",
+//       age: "8살",
+//       gender: "여아",
+//       profileImage: "/assets/sports.png"
+//     },
+//     {
+//       id: 2,
+//       name: "금정",
+//       birthDate: "2024년 03월 4일",
+//       age: "2살",
+//       gender: "남아",
+//       profileImage: "/assets/sports.png"
+//     }
+//   ];
