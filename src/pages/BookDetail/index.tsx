@@ -5,9 +5,23 @@ import Header from '../../components/layout/Header';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 
+interface Book {
+  ageGroup:string;
+  bookAuthor:string;
+  bookId:number;
+  bookImage:string;
+  bookPage:string;
+  bookSummary:string;
+  bookTitle:string;
+  genreName:string;
+  mbtiInfo:string;
+  publisher:string;
+  topicNames:string[];
+}
+
 const Index = () => {
   const { id } = useParams();
-  const [book, setBook] = useState(null);
+  const [book, setBook] = useState<Book>();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -15,6 +29,7 @@ const Index = () => {
       try {
         const response = await axios.get(`/kkumteul/api/books/${id}`);
         setBook(response.data.response);
+        console.log(response.data.response);
       } catch (error) {
         console.error('Error fetching book details:', error);
       } finally {
@@ -25,10 +40,10 @@ const Index = () => {
     fetchBookDetail();
   }, [id]);
 
-    const handleLike = async (likeType) => {
+    const handleLike = async (likeType:string) => {
       try {
         const response = await axios.post('/kkumteul/api/books/like', {
-          bookId: book.bookId,
+          bookId: book?.bookId,
           childProfileId: 2, // 추후에 동적으로 설정
           likeType: likeType,
         },  {
@@ -38,7 +53,7 @@ const Index = () => {
         console.log("좋아요 성공/ 싫어요 성공");
       } catch (error) {
         console.error('Error processing like/dislike:', error);
-        alert(error.response.data.message);
+        alert(error);
       }
     };
 

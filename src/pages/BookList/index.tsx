@@ -4,13 +4,28 @@ import Header from '../../components/layout/Header';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import {KeyboardEvent} from 'react';
+
+interface Book {
+  ageGroup:string;
+  bookAuthor:string;
+  bookId:number;
+  bookImage:string;
+  bookPage:string;
+  bookSummary:string;
+  bookTitle:string;
+  genreName:string;
+  mbtiInfo:string;
+  publisher:string;
+  topicNames:string[];
+}
 
 const Index = () => {
   const navigate = useNavigate();
-  const [books, setBooks] = useState([]);
-  const [currentPage, setCurrentPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [keyword, setKeyword] = useState("");
+  const [books, setBooks] = useState<Book[]>([]);
+  const [currentPage, setCurrentPage] = useState<number>(0);
+  const [totalPages, setTotalPages] = useState<number>(0);
+  const [keyword, setKeyword] = useState<string>("");
   const booksPerPage = 12;
 
   const fetchBooks = async (page, keyword = "") => {
@@ -27,12 +42,12 @@ const Index = () => {
     fetchBooks(currentPage, keyword); // 초기 로딩 시 전체 도서 목록 조회
   }, []);
 
-  const handlePageClick = (pageNumber) => {
+  const handlePageClick = (pageNumber:number) => {
     fetchBooks(pageNumber, keyword);
     setCurrentPage(pageNumber);
   };
 
-  const handleBookClick = (id) => {
+  const handleBookClick = (id:number) => {
     navigate(`/booklist/${id}`);
   };
 
@@ -41,7 +56,7 @@ const Index = () => {
     fetchBooks(0, keyword); // 페이지를 0으로 설정하고 키워드로 다시 데이터 로드
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyPress = (e:KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSearch();
     }
